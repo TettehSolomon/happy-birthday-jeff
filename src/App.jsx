@@ -9,13 +9,17 @@ const SWIPE_THRESHOLD = 45
 export default function App() {
   const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(true)
+  // +1 = moving forward (card slides in from the right), -1 = backward.
+  const [direction, setDirection] = useState(1)
   const gesture = useRef(null)
 
   const advance = useCallback(() => {
+    setDirection(1)
     setIndex((i) => (i + 1) % cards.length)
   }, [])
 
   const retreat = useCallback(() => {
+    setDirection(-1)
     setIndex((i) => (i - 1 + cards.length) % cards.length)
   }, [])
 
@@ -54,7 +58,7 @@ export default function App() {
 
   return (
     <div className="app" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
-      <Card card={cards[index]} />
+      <Card card={cards[index]} direction={direction} />
 
       <div className="ui-top">
         <div className="story-bar">

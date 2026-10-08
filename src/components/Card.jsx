@@ -3,16 +3,27 @@ import { motion, AnimatePresence } from 'framer-motion'
 const BASE = import.meta.env.BASE_URL
 
 // Tilt/rotate feel carried over from the CSS carousel this reel is based
-// on: the card rides in tilted from the bottom-right, straightens to
-// center, then rotates out to the bottom-left as the next one arrives —
-// while a blurred, slowly-settling copy of the same image drifts behind it.
+// on: the card rides in tilted from one side, straightens to center, then
+// rotates out to the other side as the next one arrives — while a blurred,
+// slowly-settling copy of the same image drifts behind it. The incoming/
+// outgoing side flips with the swipe direction (dir: +1 forward, -1 back).
 const cardVariants = {
-  enter: { opacity: 0, x: 110, rotateZ: 22, transformOrigin: '150% 200%' },
+  enter: (dir) => ({
+    opacity: 0,
+    x: 110 * dir,
+    rotateZ: 22 * dir,
+    transformOrigin: dir >= 0 ? '150% 200%' : '-50% 200%',
+  }),
   center: { opacity: 1, x: 0, rotateZ: 0, transformOrigin: '50% 200%' },
-  exit: { opacity: 0, x: -110, rotateZ: -22, transformOrigin: '-50% 200%' },
+  exit: (dir) => ({
+    opacity: 0,
+    x: -110 * dir,
+    rotateZ: -22 * dir,
+    transformOrigin: dir >= 0 ? '-50% 200%' : '150% 200%',
+  }),
 }
 
-export default function Card({ card }) {
+export default function Card({ card, direction = 1 }) {
   const src = `${BASE}art/${card.image}`
   const isSignature = card.signature
 
@@ -31,9 +42,10 @@ export default function Card({ card }) {
       </AnimatePresence>
 
       <div className="card-box-anchor">
-        <AnimatePresence>
+        <AnimatePresence custom={direction}>
           <motion.div
             key={card.id}
+            custom={direction}
             className={`card-box${isSignature ? ' card-box--signature' : ''}`}
             style={isSignature ? undefined : { backgroundImage: `url('${src}')` }}
             variants={cardVariants}
