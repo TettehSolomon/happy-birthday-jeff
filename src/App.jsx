@@ -1,14 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cards, DWELL_MS } from './data/cards.js'
 import Card from './components/Card.jsx'
 import './styles/app.css'
 
+// How far (px) a horizontal drag must travel to count as a swipe.
+const SWIPE_THRESHOLD = 45
+
 export default function App() {
   const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(true)
+  const gesture = useRef(null)
 
   const advance = useCallback(() => {
     setIndex((i) => (i + 1) % cards.length)
+  }, [])
+
+  const retreat = useCallback(() => {
+    setIndex((i) => (i - 1 + cards.length) % cards.length)
   }, [])
 
   // The Cards autoplay loops forever — there is no "end" to rest on.
@@ -18,8 +26,34 @@ export default function App() {
     return () => clearTimeout(t)
   }, [playing, index, advance])
 
+  // Track the start of a touch/mouse gesture so pointer-up can tell a
+  // horizontal swipe apart from a plain tap.
+  const onPointerDown = (e) => {
+    if (e.target.closest('.play-btn')) return
+    gesture.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const onPointerUp = (e) => {
+    if (e.target.closest('.play-btn')) return
+    const start = gesture.current
+    gesture.current = null
+    if (!start) return
+
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
+
+    // A mostly-horizontal drag past the threshold is a swipe: left →
+    // next card, right → previous. Anything else is treated as a tap,
+    // which pauses the reel (same as before).
+    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+      dx < 0 ? advance() : retreat()
+    } else {
+      setPlaying(false)
+    }
+  }
+
   return (
-    <div className="app" onClick={() => setPlaying(false)}>
+    <div className="app" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
       <Card card={cards[index]} />
 
       <div className="ui-top">

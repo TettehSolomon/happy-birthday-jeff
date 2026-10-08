@@ -6,6 +6,16 @@
   margin: 0 auto;
   overflow: hidden;
   background: #1c1410;
+  /* Full-screen gesture surface: let our swipe handler own the drag and
+     stop the browser from selecting text or ghost-dragging the images. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app img {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 /* ---------- Story-style segmented progress bar ---------- */
